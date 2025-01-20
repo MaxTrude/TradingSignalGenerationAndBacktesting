@@ -20,6 +20,7 @@ This example represents the standard-setting of the code provided in my GitHub r
 
 ## Comment on code usage
 "scenario_sim.py" contains the core, "Backtesting_Methods.py" contains neccessary functions of different purposes written by me.
+DISCLAMER: This is a working version configured to a standard setting. Adjusting ticker symbol and timeframe will (hopefully ;) ) not break anything. BUT the visualization of strategies is not yet variable for every possible setting (e.g. if you change signal generation from standard setting to some stochastic RSI usage it takes additional adjustment in the methods file to get the right plots).
 
 
 
