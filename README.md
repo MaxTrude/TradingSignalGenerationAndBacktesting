@@ -1,20 +1,19 @@
 # TradingSignalGenerationAndBacktesting
 
 ## Project scope and motivation
-The Black-Scholes-Formula and fundamentals of financial derivatives were known to me when I came across this idea: Writing a script that visualizes the implied volatility surface by calculating the implied volatility for traded stock options with different specifications of time to maturity and strike price by using openly available data.
-This idea seemed like a good learning opportunity because it would allow me to get into the practice of programming, data analysis and (financial) mathematics.
-Implemented aspects
+When being interested in trading, at some point you get in touch with technical indicators. Although pure technical analysis lacks quality for reasoning investment decisions, they can be helpful for timing entry and exit of positions. Earlier this year I executed a short trade on Daimler Truck after reviewing qualitative aspects, like the overall market situation, and timed the entry based on relative strength indicators. I Closed the position half a year later with profits of 22%. My idea was to implement a library for generating signals from technical data and back testing the resulting strategies. Of course, also non-technical signals can be generated, when logic and suitable data are provided.
+
+## Implemented aspects
 - Finding and transforming the right data
-- Modeling the Black-Scholes-Formula in code
-- Using the Newton-algorithm for finding numerical solutions of the equation
-- Iterating over available specifications of options and saving calculated values
-- Visualizing data and calculations incl. interpolation of the data points to a surface in the 3D-graph
-Ideas for further expansions
-- Possibility of using also put options besides call options
-- Interactive adjustment of the viewing angle in the 3D-graph
-- Using (other) color-schemes in the plots for better differentiation
-- Optimizing calculation and interpolation of data points for plotting a smoother, more accurate surface
-- Automating daily calculations to visualize the evolvement of implied volatility over time
-Example using Google’s stock option data
-The script must be provided with a stock symbol, the current price of the stock, an anticipated risk-free interest rate and a lower bound for the time to maturity of options.
-For getting the data I used the Python-library “yFinance”, which fetches the data of call options on the passed symbol from the Yahoo! Finance API. When writing this, the Google (symbol “GOOG”) stock moves around 190$ and the European Central Bank recently decreased the deposit rate to 3.00%, what will be the risk-free rate. I restricted the example to options with a minimum time to maturity of two months. This setting helps to control the extreme values plotted when time to maturity runs towards zero. The following charts are the result:
+- Variability in indicators, asset symbols, back testing approaches, signal-generation and -filtering
+- Visualization of used data, indicators, entries/exists and the corresponding equity curve
+
+## Ideas for further expansions
+- Add more pre-defined logic bricks for signal generation
+- Usage of broader data (e.g. macro data or company specifics in case of equities)
+- Automating back testing and optimization of parameters (e.g. walk-forward analysis through historical data)
+- Differentiation of generated and traded signals in the plots
+
+## Example using daily closing prices of gold futures
+Via yFinance daily data on prices of gold futures (symbol “GC=F”) is downloaded for the entire year 2024. The back test simulates being constantly in the market with one short or one long position of 100 money units without reinvesting realized profits. So, if one long position is closed, automatically a new short position is opened and vice versa. If on one signal follows another one of the same type (e.g. long and long), only the first one is executed and the position remains open until an opposite signal occurs. The script calculates the seven-day relative strength (RSI7) of the asset price and the three-day simple moving average (SMA3) of this RSI7. The fundamental logic is to indicate a long entry if is SMA3 crosses the RSI7 from below and the RSI7. Entering a short position corresponds oppositely to such a crossing from above and a RSI7.
+This example represents the standard-setting of the code provided in my GitHub repository. Detailed information on single trades simulated is printed in the console when executing the “scenario_sim.py”.
