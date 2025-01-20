@@ -8,24 +8,27 @@ import yfinance as yf
 import math
 from matplotlib.gridspec import GridSpec
 
-# Generated Relative Strength signals with a restriction -> long entries require a maximum RSI and short entries a minimum
+
+
+# Generating Relative Strength signals with a restriction -> long entries require a maximum RSI and short entries a minimum
 def rsi_crosses_cap(rsi, sma, u, l):
     #print(rsi)
     ret = len(rsi)*[0]
 
     for i in range(len(rsi)-1):
-        if rsi[i] <= sma[i] and rsi[i+1] >= sma[i+1] and rsi[i+1] > u:
-            ret[i+1] = -1
-        elif rsi[i] >= sma[i] and rsi[i+1] <= sma[i+1] and rsi[i+1] < l:
-            ret[i+1] = 1
+
+        if rsi[i] >= sma[i] and rsi[i + 1] <= sma[i + 1] and rsi[i+1] > u:
+            ret[i + 1] = -1
+        elif rsi[i] <= sma[i] and rsi[i + 1] >= sma[i + 1] and rsi[i+1] < l:
+            ret[i + 1] = 1
         else:
-            ret[i+1] = 0
+            ret[i + 1] = 0
 
     return np.array(ret)
 
 
 
-# Generated Relative Strength signals WITHOUT a restriction on the RSI
+# Generating Relative Strength signals WITHOUT a restriction on the RSI
 def rsi_crosses_nocap(rsi, sma):
     #print(rsi)
     ret = len(rsi)*[0]
@@ -34,50 +37,14 @@ def rsi_crosses_nocap(rsi, sma):
     for i in range(len(rsi)-1):
 
         if rsi[i] >= sma[i] and rsi[i+1] <= sma[i+1]:
-            ret[i+1] = 1
-            last_trade_rsi = rsi[i+1]
-        elif rsi[i] <= sma[i] and rsi[i+1] >= sma[i+1] and rsi[i+1] > 50:
             ret[i+1] = -1
-            last_trade_rsi = rsi[i+1]
+        elif rsi[i] <= sma[i] and rsi[i+1] >= sma[i+1]:
+            ret[i+1] = 1
         else:
             ret[i+1] = 0
 
-
-
     return np.array(ret)
 
-
-def rsi_crosses_nocap_relative_dist(rsi, sma, d, rsi_len):
-    #print(rsi)
-    ret = 2*rsi_len*[0]
-    ret.append(0)
-
-    last_trade_rsi = -1
-
-    for i in range(2*rsi_len, len(rsi)-1):
-
-        if last_trade_rsi == -1:
-            if rsi[i] <= sma[i] and rsi[i+1] >= sma[i+1]:
-                ret.append(1)
-                last_trade_rsi = rsi[i+1]
-            elif rsi[i] >= sma[i] and rsi[i+1] <= sma[i+1]:
-                ret.append(-1)
-                last_trade_rsi = rsi[i+1]
-            else:
-                ret.append(0)
-        else:
-            if rsi[i] <= sma[i] and rsi[i+1] >= sma[i+1] and rsi[i+1] <= last_trade_rsi*(1-d):
-                ret.append(1)
-                last_trade_rsi = rsi[i+1]
-            elif rsi[i] >= sma[i] and rsi[i+1] <= sma[i+1] and rsi[i+1] >= last_trade_rsi*(1+d):
-                ret.append(-1)
-                last_trade_rsi = rsi[i+1]
-            else:
-                ret.append(0)
-
-
-
-    return np.array(ret)
 
 
 # Generated Stochastic-Relative Strength signals WITHOUT a restriction on the RSI
@@ -163,6 +130,7 @@ def rsi_diff_integration(data, diff_thres, u, l):
 
     return new_action
 
+
 # As above, based on stochastic RSI ("stochrsi_crosses_nocap")
 def stochrsi_diff_integration(data, diff_thres):
 
@@ -208,54 +176,6 @@ def stochrsi_diff_integration(data, diff_thres):
     new_action[first_marker] = 0
 
     return new_action, action_diff_avg, action_diff_sum
-
-
-def sma4_crosses(data, sma4_len, sma_len):
-    sma = data["sma"]
-    close = data["close"]
-    sma_close = data["sma_close"]
-    sma_open = data["sma_open"]
-    sma_high = data["sma_high"]
-    sma_low = data["sma_low"]
-
-    sma4_diff = data["sma4_diff"]
-    sma4_mean = data["sma4_mean"]
-    sma4_diff_norm = data["sma4_diff_norm"]
-    sma4_diff_derivative_sma = data["sma4_diff_derivative_sma"]
-
-    ret = len(sma)*[0]
-
-
-    for i in range(max(sma4_len, sma_len), len(sma)-1):
-
-        ma_i = max(sma_close[i], sma_open[i], sma_high[i], sma_low[i])
-        mi_i = min(sma_close[i], sma_open[i], sma_high[i], sma_low[i])
-        ma_p1 = max(sma_close[i+1], sma_open[i+1], sma_high[i+1], sma_low[i+1])
-        mi_p1 = min(sma_close[i+1], sma_open[i+1], sma_high[i+1], sma_low[i+1])
-
-
-        #if sma[i] <= mi_i and sma[i+1] >= mi_p1 and sma4_diff_norm[i+1] > -1:
-        #    ret[i+1] = -1
-        #elif sma[i] >= ma_i and sma[i+1] <= ma_p1 and sma4_diff_norm[i+1] != 1000:
-              #and sma4_diff_norm[i+1] <= 5):
-        #    ret[i+1] = 1
-        #elif close[i] <= mi and close[i + 1] >= mi and sma4_diff_norm[i + 1] > 1.1*np.mean(sma4_diff_norm):
-        #    ret.append(-1)
-
-        if sma[i] <= mi_i and sma[i+1] >= mi_p1 and sma4_diff_norm[i+1] > 0:
-            ret[i+1] = 1
-        elif sma[i] >= ma_i and sma[i+1] <= ma_p1 and sma4_diff_norm[i+1] != 1000:
-              #and sma4_diff_norm[i+1] <= 5):
-            ret[i+1] = -1
-        #elif close[i] <= mi and close[i + 1] >= mi and sma4_diff_norm[i + 1] > 1.1*np.mean(sma4_diff_norm):
-        #    ret.append(-1)
-
-        else:
-            ret[i+1] = 0
-
-
-    return np.array(ret)
-
 
 
 
@@ -379,7 +299,7 @@ def backtest_moneyinput(data, money=100, split=1, loss_limit_per=0, max_ticks=0)
     return balance, end_position_balance, equity_curve, returns_per_trade
 
 
-# This backtesting function opens a position of one contract/share/... on every signal, as long as the sum of money
+# This backtesting function opens a position of one contract per share  on every signal, as long as the sum of money
 # invested is lower than the passed maximum value "max"
 def backtest_1persignal(data, max):
 
@@ -501,32 +421,6 @@ def backtest_allinever(data, money):
     return balance-money, end_position_balance, equity_curve
 
 
-def intraday_open_close(data1, data2, startkapital, reinv):
-
-    S = []
-    equity_curve = [startkapital]
-
-    if reinv == False:
-
-        for i in range(0, len(data1)):
-            q = (data1[i] / data2[i])-1
-            S.append(q)
-            equity_curve.append(equity_curve[i]+q)
-            print(equity_curve)
-
-        return startkapital * (1+sum(S)), 0, equity_curve, S
-
-
-    elif reinv == True:
-
-        for i in range(0, len(data1)):
-            q = (data1[i] / data2[i])-1
-            S.append(q)
-            equity_curve.append(equity_curve[i]*(1+q))
-            #print(equity_curve)
-        return equity_curve[-1], 0, equity_curve, S
-
-
 
 
 ######### HELP FUNCTIONS
@@ -542,6 +436,8 @@ def hochk_neg(x,k):
 
 
 ######### VISUALIZATION
+## This function has to be redesigned, so that you dont have to do manual adjustments of the visualization function in case of 
+## changing the calculation of indicators
 
 def scenario_visu(data, backtest, m, M, rsi_len,
 rsi_sma_len,
@@ -584,7 +480,7 @@ end):
     ax1.legend(["Closing Price", "Long Signal", "Short Signal"], bbox_to_anchor=(1, 1), fontsize=20)
     ax1.tick_params(labelsize=20)
 
-    # axs[1].plot(data["rsi"][m:M])
+    #ax2.plot(data["rsi"])
     ax2.plot(data["rsi_sma"], zorder=1)
     ax2.plot(data["rsi_smooth"], zorder=2)
     # axs[1].plot(data["stochrsi"][m:M])
@@ -599,7 +495,7 @@ end):
     ax2.scatter(list(range(0, M - m)), long, color="green", zorder=3)
     ax2.scatter(list(range(0, M - m)), short, color="red", zorder=4)
 
-    ax2.legend(["RSI" + str(rsi_len), "SMA(RSI"+ str(rsi_len)+ ", " + str(rsi_sma_len) + ")", "Long Signal", "Short Signal"], bbox_to_anchor=(1.35, 1),
+    ax2.legend(["SMA(RSI," + str(rsi_sma_len)+")", "SMA(RSI, "+ str(rsi_smooth_len)+ ")", "Long Signal", "Short Signal"], bbox_to_anchor=(1.35, 1),
                fontsize=20)
     #ax2.hlines(y=50, xmin=0, xmax=M, color="black")
     ax2.tick_params(labelsize=20)
@@ -626,43 +522,8 @@ end):
     ax3.plot(backtest[2])
     ax3.legend(["Equity Curve"], bbox_to_anchor=(1, 1), fontsize=20)
     ax3.tick_params(labelsize=20)
-    # print([i for i in backtest[3] if i >= 0])
-    # print([i for i in backtest[3] if i < 0])
-
-
-    """
-    last = 0
-    for i in range(1, len(data["Signal"])):
-
-        if data["Signal"][i] == 0:
-            continue
-        elif data["Signal"][i] == 1 and last in [0, -1]:
-            ax1.axvline(x=i, color="green", linestyle="--", linewidth=0.5)
-            ax2.axvline(x=i, color="green", linestyle="--", linewidth=0.5)
-            last = 1
-
-        elif data["Signal"][i] == -1 and last in [0, 1]:
-            ax1.axvline(x=i, color="red", linestyle="--", linewidth=0.5)
-            ax2.axvline(x=i, color="red", linestyle="--", linewidth=0.5)
-            last = -1
-
-        else:
-            continue
-    """
-
 
 
     plt.tight_layout()
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
 
