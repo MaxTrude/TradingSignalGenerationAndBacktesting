@@ -128,7 +128,7 @@ end = end_date):
 
     #######     Generation of signals -> Method to use to be selected
 
-#Diese für Portfolio    #Basic RSI-cross based signals with restriction of upper/lower RSI-bounds
+    #Basic RSI-cross based signals with restriction of upper/lower RSI-bounds
     #data["Signal"] = meth.rsi_crosses_cap(data["rsi"][:], data["rsi_sma"][:], u, l)
 
     #Basic RSI-cross based signals without upper/lower bound
@@ -200,32 +200,6 @@ print("Realized profits + balance of open positions:\t", scen[0]+scen[1])
 
 
 
-######      Multi Test
-"""
-
-results = pd.DataFrame({'rsi': [], 'threshold': [], 'start_date' : [], "end_date" : [], 'return': []})
-st = np.arange(2010,2024)
-
-
-for r_l in range(7,8):
-
-    for thres in range(80,120, 10):
-
-        for start in st:
-
-            s = str(start)+"-01-01"
-            e = str(start+1)+"-01-01"
-
-            r = szenario(
-                rsi_len=r_l,
-                diff_thres=thres,
-                start=s,
-                end=e)
-
-            new_row = {"rsi":r_l, "threshold": thres, "start_date": s, "end_date": e, "return":r}
-            results = results._append(new_row, ignore_index=True)
-            print(new_row)
-"""
 
 
 
