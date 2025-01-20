@@ -22,12 +22,12 @@ from matplotlib.gridspec import GridSpec
 ######      Scenario specifications
 
 #Simple Moving Average (SMA)
-sma_length = 3
+sma_length = 14
 sma4_length = 8
 
 #Relative Strengh Index (RSI)
 rsi_length = 7
-rsi_sma_length = 3
+rsi_sma_length = 14
 rsi_smooth_length = 7       # "Smooth" is here just a second SMA on the RSI
 
 #Stochastic RSI
@@ -42,7 +42,7 @@ diff_threshold = 1
 diff_threshold_tupel = (0.01, 0.01)
 
 # Asset and time frame
-symbol = "GC=F"
+symbol = "GOOG"
 start_date = "2024-01-01"
 end_date = "2024-12-31"
 
@@ -70,6 +70,7 @@ end = end_date):
     data = pd.DataFrame(yf.download(sym, start=start, end=end))
     data.columns = [col[0].lower() for col in data.columns]
 
+    
     ###     Adding technical indicators to the data (un-comment those who needed)
 
     #Simple moving averages
@@ -100,57 +101,42 @@ end = end_date):
     #data["%opentoLow"] = [x / y for (x, y) in zip(data["Low"], data["Open"])]
     #data["%opentoHigh"] = [x / y for (x, y) in zip(data["High"], data["Open"])]
 
-
-
-    #data["sma4_diff"] = [max(a,b,c,d)-min(a,b,c,d) for (a,b,c,d) in zip(data["sma_close"], data["sma_open"], data["sma_high"], data["sma_low"])]
-    #data["sma4_mean"] = [stat.mean((a, b, c, d)) for (a, b, c, d) in zip(data["sma_close"], data["sma_open"], data["sma_high"], data["sma_low"])]
-    #data["sma4_diff_norm"] = [a-np.mean(data["sma4_diff"]) for (a, b) in zip(data["sma4_diff"], data["sma4_mean"])]
-    #data["sma4_diff_norm_sma"] = ta.SMA(data, 2, "sma4_diff_norm")
-    #h = len(data["sma4_diff"])*[0]
-    #h[1:] = ([(data["sma4_diff"][i] - data["sma4_diff"][i-1]) for i in range(1, len(data["sma4_diff"]))])
-    #data["sma4_diff_derivative"] = h
-    #data["sma4_diff_derivative"].fillna(0, inplace=True)
-    #data["sma4_diff_derivative_sma"] = ta.SMA(data, 7, "sma4_diff_derivative")
-
     # Bollinger Bands
     #bollinger = ta.BBANDS(data, bollinger_len, column="close")
     #data = data.join(bollinger)
 
+
     # Replace NaN values with 0
     data.fillna(0, inplace=True)
 
-    m = rsi_len     # Earlierst plottet data point -> needed because early datapoints are depending on indicator not usable yet (here RSI-length)
+
+    m = max(rsi_len, rsi_sma_len, rsi_smooth_len)     # Earlierst plottet data point -> needed because early datapoints are depending on indicator not usable yet (here RSI-length)
     M = len(data)    # Latest used data points
 
     u = 50          # Upper minimum bound for RSI
     l = 50          # Lower maximum bound for RSI
 
 
-    #######     Generation of signals -> Method to use to be selected
+
+    #######     Generation of signals -> Method to use to use for signals has to be un-commented
 
     #Basic RSI-cross based signals with restriction of upper/lower RSI-bounds
-    #data["Signal"] = meth.rsi_crosses_cap(data["rsi"][:], data["rsi_sma"][:], u, l)
+    #data["Signal"] = meth.rsi_crosses_cap(data["rsi_smooth"][:], data["rsi_sma"][:], 0, 100)
 
-    #Basic RSI-cross based signals without upper/lower bound
-    data["Signal"] = meth.rsi_crosses_nocap(data["rsi"][:], data["rsi_sma"][:])
-
-    #Smoothened RSI-cross based signals with restriction of upper/lower RSI-bounds
-    #data["Signal"] = meth.rsi_crosses_cap(data["rsi_smooth"][:], data["rsi_sma"][:], u, l)
-
-    #Diese für Portfolio    #RSI based signal without upper/lower bounds with Difference-integration-filter
+    #Basic RSI-cross based signals without restirction
+    data["Signal"] = meth.rsi_crosses_nocap(data["rsi_smooth"][:], data["rsi_sma"][:])
+    
+    #Basic RSI based signal with upper/lower bounds with own Difference-Integration-filter
     #data["Signal"] = meth.rsi_diff_integration(data, diff_thres, u, l)
 
-    #Stochastic RSI based Action
+    #Basic RSI-cross based signals without restriction
     #data["Signal"] = meth.stochrsi_crosses_nocap(data["stochrsi"], data["stochrsi_sma"])
 
-    #Stochastic RSI based Action with Difference-integration-filter
+    #Basic RSI based signal without upper/lower bounds with own Difference-Integration-filter
     #data["Signal"], stochrsi_avg, stochrsi_sum= meth.stochrsi_diff_integration(data, diff_thres_tu)
 
-    #Bollinger based signals
-    #data["Signal"] = meth.rsi_crosses_nocap(data["rsi_smooth"][:], data["rsi_sma"][:]) -> noch nicht implementiert
-
-    # SMA4 cross Signal
-    #data["Signal"] = meth.sma4_crosses(data, sma4_len, sma_len)
+    #Bollinger based signals -> not yet implemented
+    #data["Signal"] = meth.NAME(data["rsi_smooth"][:], data["rsi_sma"][:])
 
 
     # Reindexing data of proper length
@@ -181,6 +167,7 @@ end = end_date):
 
 
 
+
 ######      Single Test
 
 scen = szenario(
@@ -196,10 +183,5 @@ end = end_date)
 
 print("Realized profits:\t\t\t\t\t\t\t\t", scen[0])
 print("Realized profits + balance of open positions:\t", scen[0]+scen[1])
-
-
-
-
-
 
 
